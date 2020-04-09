@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask
+from flask import Flask, jsonify
 from flask_restful import Api
 from flask_jwt_extended import JWTManager
 
@@ -27,6 +27,37 @@ def add_claims_to_jwt(identity):
     if identity == 1:
         return {'is_admin': True}  # just and example... this should come from db or something
     return {'is_admin': False}
+
+
+@jwt.expired_token_loader
+def expired_token_callback(error):
+    return jsonify({
+        "description": "Your token has expired. Please refresh it ar /refresh using you refresh token.",
+        "error": "token_expired"
+    }), 401
+
+
+@jwt.needs_fresh_token_loader
+def needs_fresh_token_callback():
+    return jsonify({
+        "description": "This endpoint requires a fresh token. Please log in again.",
+        "error": "token_no_fresh"
+    }), 401
+
+
+@jwt.invalid_token_loader
+def invalid_token_callback(error):
+    return "Invalid token!", 401
+
+
+@jwt.unauthorized_loader
+def unauthorized_callback(error):
+    return "Get back, boy! You're not welcome here!", 401
+
+
+@jwt.revoked_token_loader
+def unauthorized_callback():
+    return "Get back, boy! You're not welcome here anymore!", 401
 
 
 api.add_resource(Store, '/store/<string:name>')
