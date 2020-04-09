@@ -1,7 +1,8 @@
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_required,
-                                jwt_refresh_token_required, get_jwt_identity)
+                                jwt_refresh_token_required, get_jwt_identity, get_raw_jwt)
 from models.user import UserModel
+from jwt_blacklist import BLACKLIST
 
 _user_parser = reqparse.RequestParser()
 _user_parser.add_argument('username',
@@ -75,3 +76,11 @@ class TokenRefresh(Resource):
         user_id = get_jwt_identity()
         new_token = create_access_token(identity=user_id, fresh=False)
         return {'access_token': new_token}
+
+
+class UserLogout(Resource):
+    @jwt_required
+    def post(self):
+        jti = get_raw_jwt()['jti']
+        BLACKLIST.add(jti)
+        return {'message': 'User logged out'}, 200
