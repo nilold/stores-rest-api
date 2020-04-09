@@ -8,14 +8,17 @@ from resources.item import Item, ItemList
 from resources.store import Store, StoreList
 from resources.user import UserRegister, User, UserLogin, TokenRefresh
 
+from users_blacklist import BLACKLIST
+
 app = Flask(__name__)
 
 app.config['DEBUG'] = True
-
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///data.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
 app.config['PROPAGATE_EXCEPTIONS'] = True
+app.config['JWT_BLACKLIST_ENABLED'] = True
+app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access', 'refresh']
+
 app.secret_key = 'jose'
 api = Api(app)
 
@@ -27,6 +30,11 @@ def add_claims_to_jwt(identity):
     if identity == 1:
         return {'is_admin': True}  # just and example... this should come from db or something
     return {'is_admin': False}
+
+
+@jwt.token_in_blacklist_loader
+def is_in_blacklist(decrypted_token):
+    return decrypted_token['identity'] in BLACKLIST
 
 
 @jwt.expired_token_loader
@@ -57,7 +65,7 @@ def unauthorized_callback(error):
 
 @jwt.revoked_token_loader
 def unauthorized_callback():
-    return "Get back, boy! You're not welcome here anymore!", 401
+    return "Get back, boy! You're not welcome here ANYMORE!", 401
 
 
 api.add_resource(Store, '/store/<string:name>')
