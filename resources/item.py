@@ -2,18 +2,19 @@ from flask_restful import Resource, reqparse
 from flask_jwt import jwt_required
 from models.item import ItemModel
 
+
 class Item(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('price',
-        type=float,
-        required=True,
-        help="This field cannot be left blank!"
-    )
+                        type=float,
+                        required=True,
+                        help="This field cannot be left blank!"
+                        )
     parser.add_argument('store_id',
-        type=int,
-        required=True,
-        help="Every item needs a store id."
-    )
+                        type=int,
+                        required=True,
+                        help="Every item needs a store id."
+                        )
 
     @jwt_required()
     def get(self, name):
@@ -61,4 +62,4 @@ class Item(Resource):
 
 class ItemList(Resource):
     def get(self):
-        return {'items': [x.json() for x in ItemModel.query.all()]}
+        return {'items': [x.json() for x in ItemModel.find_all()]}
